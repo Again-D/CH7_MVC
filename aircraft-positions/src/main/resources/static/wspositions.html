@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Aircraft Position Report (Live Updates)</title>
+    <script>
+        // WebSocket 객체 생성
+        const socket = new WebSocket('ws://' + window.location.host + '/ws');
+
+        // 소켓 로그 - 연결시 동작으로 연결 로그 출력 (생략 가능)
+        socket.onopen = function () {
+            console.log('WebSocket connection is open for business, bienvenidos!');
+        };
+
+        // 소켓 메시지
+        socket.onmessage = function (message) {
+            let text = "";
+            let arrAC = message.data.split("Aircraft");
+            let ac = "";
+
+            for (let i = 1; i < arrAC.length; i++) {
+                ac = (arrAC[i].endsWith(", "))
+                    ? arrAC[i].substring(0, arrAC[i].length - 2)
+                    : arrAC[i]
+
+                text += "Aircraft" + ac + "\n\n";
+            }
+
+            document.getElementById("positions").innerText = text;
+        };
+
+        // 소켓 로그 - 연결 종료시 로그 출력(생략가능)
+        socket.onclose = function () {
+            console.log('WebSocket connection closed, hasta la próxima!');
+        };
+    </script>
+</head>
+<body>
+<h1>Current Aircraft Positions</h1>
+<div style="border-style: solid; border-width: 2px; margin-top: 15px;
+        margin-bottom: 15px; margin-left: 15px; margin-right: 15px;">
+    <label id="positions"></label>
+</div>
+</body>
+</html>

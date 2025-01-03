@@ -8,6 +8,8 @@ import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
+import java.io.IOException;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -30,21 +32,40 @@ public class WebSocketHandler extends TextWebSocketHandler {
         return sessionList;
     }
 
-    // 연결 후 작업
+    // 연결 후 작업 - 연결에 대한 로그
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
-        super.afterConnectionEstablished(session);
+        // 세션 저장소 : sessionList 에 추가
+        sessionList.add(session);
+        // 연결 세션 로그 기록
+        System.out.println("Connection established from " + session.toString() + " @ " + Instant.now().toString());
     }
 
     // 연결된 이후 데이터(메시지) 작업 - 메시지 처리 작업을 진행
     @Override
     protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
-        super.handleTextMessage(session, message);
+        try {
+            System.out.println("Message received: " + message + " , from " + session.toString());
+            // TextMessage message의 내용을 sessionList에 있는 연결로 전달 처리..
+            for (WebSocketSession sessionInList : sessionList) {
+                if (sessionInList != session) {
+                    sessionInList.sendMessage(message);
+                    System.out.println("---> Sending Message: '" + message + "' to" + sessionInList.toString());
+                }
+            }
+        } catch (IOException e) {
+            System.out.println("Exception in handleTextMessage: " + e.getLocalizedMessage());
+        }
+
+
     }
 
-    // 연결 종료 후 작업
+    // 연결 종료 후 작업 - 연결 종료에 대한 로그
     @Override
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) throws Exception {
-        super.afterConnectionClosed(session, status);
+        // 종료시 sessionList에서 session을 제거
+        sessionList.remove(session);
+        // 로그 기록
+        System.out.println("Connection Closed by " + session.toString() + " @ " + Instant.now().toString());
     }
 }
